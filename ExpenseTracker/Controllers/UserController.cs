@@ -2,15 +2,15 @@ using Microsoft.AspNetCore.Mvc;
 using ExpenseTracker.Models;
 using ExpenseTracker.Data;
 using ExpenseTracker.Utils;
-
+using System.Diagnostics;
 
 namespace ExpenseTracker.Controllers
 {
-    public class AccountController : Controller
+    public class UserController : Controller
     {
         private readonly ApplicationDbContext _db;
 
-        public AccountController(ApplicationDbContext db)
+        public UserController(ApplicationDbContext db)
         {
             _db = db;
         }
@@ -22,7 +22,12 @@ namespace ExpenseTracker.Controllers
         public IActionResult Register(string username, string password, string? email)
         {
             if (_db.Users.Any(u => u.Username == username))
-                return View("Error", $"Username '{username}' already exists");
+                return View("Error", new ErrorViewModel
+                {
+                    RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+                    Message = $"Username '{username}' already exists"
+                });
+
 
             var result = PasswordUtil.HashPassword(password);
 
@@ -43,11 +48,14 @@ namespace ExpenseTracker.Controllers
         [HttpPost]
         public IActionResult Login(string username, string password)
         {
-            var hash = PasswordUtil.HashPassword(password).Hash;
-            var user = _db.Users.FirstOrDefault(u => u.Username == username && u.PasswordHash == hash);
+            var user = _db.Users.FirstOrDefault(u => u.Username == username);
 
-            if (user == null)
-                return View("Error", $"Invalid credentials");
+            if (user == null || !PasswordUtil.VerifyPassword(password, user.PasswordHash, user.PasswordSalt))
+                return View("Error", new ErrorViewModel
+                {
+                    RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+                    Message = "Invalid credentials"
+                });
 
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("Role", user.Role);
