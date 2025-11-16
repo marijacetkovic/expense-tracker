@@ -19,15 +19,24 @@ namespace ExpenseTracker.Controllers
         public IActionResult Login() => View();
 
         [HttpPost]
-        public IActionResult Register(string username, string password, string? email)
+        public IActionResult Register(RegisterViewModel model)
         {
-            if (_db.Users.Any(u => u.Username == username))
-                return View("Error", new ErrorViewModel
-                {
-                    RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
-                    Message = $"Username '{username}' already exists"
-                });
+            if (!ModelState.IsValid) {
+                return View(model);
+            }
 
+            var username = model.Username;
+            var password = model.Password;
+            var email = model.Email;
+        
+            if (_db.Users.Any(u => u.Username == username)){
+                ModelState.AddModelError(string.Empty, "Username already exists.");
+                return View(model);
+            }
+            if (_db.Users.Any(u => u.Email == email)){
+                ModelState.AddModelError(string.Empty, "Email is already registered.");
+                return View(model);
+            }
 
             var result = PasswordUtil.HashPassword(password);
 
@@ -39,24 +48,38 @@ namespace ExpenseTracker.Controllers
                 Email = email
             };
 
-            _db.Users.Add(user);
-            _db.SaveChanges();
+            try{
+                _db.Users.Add(user);
+                _db.SaveChanges();
+            }
+            catch (Exception)
+            {
+                ModelState.AddModelError(string.Empty, "Something went wrong. Please try again.");
+                return View(model);
+            }
+
 
             return RedirectToAction("Login");
         }
 
         [HttpPost]
-        public IActionResult Login(string username, string password)
+        public IActionResult Login(LoginViewModel model)
         {
-            var user = _db.Users.FirstOrDefault(u => u.Username == username);
+            if (!ModelState.IsValid) {
+                return View(model);
+            }
 
-            if (user == null || !PasswordUtil.VerifyPassword(password, user.PasswordHash, user.PasswordSalt))
-                return View("Error", new ErrorViewModel
-                {
-                    RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
-                    Message = "Invalid credentials"
-                });
+            var user = _db.Users.FirstOrDefault(u => u.Username == model.Username);
 
+            if (user == null){
+                ModelState.AddModelError(string.Empty, "Username does not exist.");
+                return View(model);
+            }
+
+            if (!PasswordUtil.VerifyPassword(model.Password, user.PasswordHash, user.PasswordSalt)){
+                ModelState.AddModelError(string.Empty, "Incorrect password.");
+                return View(model);
+            }
             HttpContext.Session.SetInt32("UserId", user.Id);
             HttpContext.Session.SetString("Role", user.Role);
 

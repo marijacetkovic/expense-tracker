@@ -39,5 +39,11 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=User}/{action=Register}/{id?}");
 
+using(var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate(); // creates tables automatically
+}
+
 
 app.Run();
