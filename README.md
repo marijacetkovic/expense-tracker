@@ -10,7 +10,7 @@ A simple **ASP.NET Core MVC** web application.
 ## Installation
 
 ```bash
-git clone https://github.com/marijacetkovic/ExpenseTracker.git
+git clone https://github.com/marijacetkovic/expense-tracker.git
 cd ExpenseTracker
 dotnet run
 ```
