@@ -11,7 +11,7 @@ A simple **ASP.NET Core MVC** web application.
 
 ```bash
 git clone https://github.com/marijacetkovic/expense-tracker.git
-cd ExpenseTracker
+cd expense-tracker
 dotnet run
 ```
 
