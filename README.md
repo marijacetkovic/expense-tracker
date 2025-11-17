@@ -18,3 +18,4 @@ dotnet run
 
 
 Then open your browser: http://localhost:8080.
+Alternatively, the app can be used at: https://expense-tracker-dx0k.onrender.com.
