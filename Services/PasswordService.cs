@@ -1,10 +1,10 @@
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 
-namespace ExpenseTracker.Utils
+namespace ExpenseTracker.Services
 {
     
-    public static class PasswordUtil{
+    public static class PasswordService{
         
         // Generates a random salt and hashes the password using PBKDF2
         public static (string Hash, string Salt) HashPassword(string password)
@@ -17,7 +17,7 @@ namespace ExpenseTracker.Utils
                 password: password,
                 salt: salt,
                 prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 100000,
+                iterationCount: 10000,
                 numBytesRequested: 256 / 8));
 
             // Return both hash and salt as base64 strings
@@ -33,7 +33,7 @@ namespace ExpenseTracker.Utils
                 password: password,
                 salt: saltBytes,
                 prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 100_000,
+                iterationCount: 10000,
                 numBytesRequested: 256 / 8));
 
             return hashToCheck == storedHash;

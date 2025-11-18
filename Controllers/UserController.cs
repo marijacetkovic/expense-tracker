@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ExpenseTracker.Models;
 using ExpenseTracker.Data;
-using ExpenseTracker.Utils;
+using ExpenseTracker.Services;
 using System.Diagnostics;
 
 namespace ExpenseTracker.Controllers
@@ -9,10 +9,12 @@ namespace ExpenseTracker.Controllers
     public class UserController : Controller
     {
         private readonly ApplicationDbContext _db;
+        private readonly UserService _userService;
 
         public UserController(ApplicationDbContext db)
         {
             _db = db;
+            _userService = new UserService(db);
         }
 
         public IActionResult Register() => View();
@@ -24,40 +26,17 @@ namespace ExpenseTracker.Controllers
             if (!ModelState.IsValid) {
                 return View(model);
             }
-
-            var username = model.Username;
-            var password = model.Password;
-            var email = model.Email;
         
-            if (_db.Users.Any(u => u.Username == username)){
+            if (_userService.UsernameExists(model.Username)){
                 ModelState.AddModelError(string.Empty, "Username already exists.");
                 return View(model);
             }
-            if (_db.Users.Any(u => u.Email == email)){
+            if (_userService.EmailExists(model.Email)){
                 ModelState.AddModelError(string.Empty, "Email is already registered.");
                 return View(model);
             }
 
-            var result = PasswordUtil.HashPassword(password);
-
-            var user = new User
-            {
-                Username = username,
-                PasswordHash = result.Hash,
-                PasswordSalt = result.Salt,
-                Email = email
-            };
-
-            try{
-                _db.Users.Add(user);
-                _db.SaveChanges();
-            }
-            catch (Exception)
-            {
-                ModelState.AddModelError(string.Empty, "Something went wrong. Please try again.");
-                return View(model);
-            }
-
+            _userService.CreateUser(model.Username, model.Email, model.Password);
 
             return RedirectToAction("Login");
         }
@@ -68,15 +47,14 @@ namespace ExpenseTracker.Controllers
             if (!ModelState.IsValid) {
                 return View(model);
             }
-
-            var user = _db.Users.FirstOrDefault(u => u.Username == model.Username);
-
-            if (user == null){
-                ModelState.AddModelError(string.Empty, "Username does not exist.");
+            var user = _userService.GetUser(model.Username);
+            
+            if (user==null){
+                ModelState.AddModelError(string.Empty, "User is not registered.");
                 return View(model);
             }
 
-            if (!PasswordUtil.VerifyPassword(model.Password, user.PasswordHash, user.PasswordSalt)){
+            if (!PasswordService.VerifyPassword(model.Password, user.PasswordHash, user.PasswordSalt)){
                 ModelState.AddModelError(string.Empty, "Incorrect password.");
                 return View(model);
             }

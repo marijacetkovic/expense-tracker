@@ -426,8 +426,6 @@
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/mmynpr69j8-muycvpuwrr.gz
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/h2yxc2f1l2-87fc7y1x7t.gz
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/mp7bc938el-mlv21k5csn.gz
-/Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/x78cfnd2y4-w7oap62xsl.gz
-/Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/y431f9po53-w7oap62xsl.gz
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/staticwebassets.build.json
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/staticwebassets.build.json.cache
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/staticwebassets.development.json
@@ -438,3 +436,5 @@
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/ExpenseTracker.pdb
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/ExpenseTracker.genruntimeconfig.cache
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/ref/ExpenseTracker.dll
+/Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/x78cfnd2y4-fowfwvk6mb.gz
+/Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/y431f9po53-fowfwvk6mb.gz
