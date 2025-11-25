@@ -7,8 +7,14 @@ builder.WebHost.UseUrls("http://0.0.0.0:8080");
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+//
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite("Data Source=users.db"));
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        new MySqlServerVersion(new Version(12, 1, 2)) 
+    )
+);
+
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(30);

@@ -438,3 +438,5 @@
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/ref/ExpenseTracker.dll
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/x78cfnd2y4-fowfwvk6mb.gz
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/y431f9po53-fowfwvk6mb.gz
+/Users/Asus/Projects/expense-tracker/bin/Debug/net9.0/MySqlConnector.dll
+/Users/Asus/Projects/expense-tracker/bin/Debug/net9.0/Pomelo.EntityFrameworkCore.MySql.dll

@@ -41,8 +41,7 @@ namespace ExpenseTracker.Services
 
         public User GetUser(string username)
         {
-            var user = _db.Users.FirstOrDefault(u => u.Username == username);
-            return user;
+            return _db.Users.FirstOrDefault(u => u.Username == username);
         }
     }
 }
