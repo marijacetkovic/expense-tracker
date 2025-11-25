@@ -8,9 +8,18 @@ builder.WebHost.UseUrls("http://0.0.0.0:8080");
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 //
+
+var host = Environment.GetEnvironmentVariable("DB_HOST");
+var port = Environment.GetEnvironmentVariable("DB_PORT");
+var dbName = Environment.GetEnvironmentVariable("DB_NAME");
+var user = Environment.GetEnvironmentVariable("DB_USER");
+var password = Environment.GetEnvironmentVariable("DB_PASSWORD");
+
+var connectionString = $"Server={host};Port={port};Database={dbName};User={user};Password={password};";
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
+        connectionString,
         new MySqlServerVersion(new Version(12, 1, 2)) 
     )
 );
