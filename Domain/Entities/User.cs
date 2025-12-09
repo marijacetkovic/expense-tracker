@@ -1,7 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-
-namespace ExpenseTracker.Models;
-
+namespace ExpenseTracker.Domain.Entities;
 public class User
 {
     public int Id { get; set; }

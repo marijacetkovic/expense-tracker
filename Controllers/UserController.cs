@@ -3,51 +3,46 @@ using ExpenseTracker.Models;
 using ExpenseTracker.Data;
 using ExpenseTracker.Services;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace ExpenseTracker.Controllers
 {
     public class UserController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly UserRepository _repo;
         private readonly UserService _userService;
 
-        public UserController(ApplicationDbContext db)
+        public UserController(UserRepository repo, UserService userService)
         {
-            _db = db;
-            _userService = new UserService(db);
+            _repo = repo;
+            _userService = userService;
         }
 
         public IActionResult Register() => View();
         public IActionResult Login() => View();
 
         [HttpPost]
-        public IActionResult Register(RegisterViewModel model)
+        public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid) {
                 return View(model);
             }
         
-            if (_userService.UsernameExists(model.Username)){
-                ModelState.AddModelError(string.Empty, "Username already exists.");
+            if (await _userService.CreateUserAsync(model.Username, model.Email, model.Password) == false){
+                ModelState.AddModelError(string.Empty, "Username or Email already exists.");
                 return View(model);
             }
-            if (_userService.EmailExists(model.Email)){
-                ModelState.AddModelError(string.Empty, "Email is already registered.");
-                return View(model);
-            }
-
-            _userService.CreateUser(model.Username, model.Email, model.Password);
 
             return RedirectToAction("Login");
         }
 
         [HttpPost]
-        public IActionResult Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid) {
                 return View(model);
             }
-            var user = _userService.GetUser(model.Username);
+            var user = await _userService.GetUser(model.Username);
             
             if (user==null){
                 ModelState.AddModelError(string.Empty, "User is not registered.");
