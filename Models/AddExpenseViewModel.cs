@@ -1,0 +1,31 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+
+namespace ExpenseTracker.Models
+{
+    public class AddExpenseViewModel
+    {
+        public AddExpenseViewModel() {
+        Participants = new List<ParticipantViewModel>();
+        }
+        
+        public string Title { get; set; }
+
+        [Required]
+        [Range(0.01, double.MaxValue)]
+        public decimal Amount { get; set; }
+
+        [Required]
+        [DataType(DataType.Date)]
+        public DateTime Date { get; set; }
+
+        public List<ParticipantViewModel> Participants { get; set; }
+    }
+
+    public class ParticipantViewModel
+    {
+        public required string Username { get; set; }
+        public decimal ShareAmount { get; set; }
+    }
+}

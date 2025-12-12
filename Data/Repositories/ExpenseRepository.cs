@@ -16,4 +16,11 @@ public class ExpenseRepository
     public async Task SaveChangesAsync() => await _db.SaveChangesAsync();
 
     public async Task<Expense?> GetAsync(Guid id) => await _db.Expenses.FindAsync(id);
+    public async Task<List<Expense>> GetAllExpensesAsync()
+    {
+        return await _db.Expenses
+            .Include(e => e.Participants)
+            .ThenInclude(ep => ep.User)
+            .ToListAsync();
+    }
 }

@@ -9,12 +9,10 @@ namespace ExpenseTracker.Controllers
 {
     public class UserController : Controller
     {
-        private readonly UserRepository _repo;
         private readonly UserService _userService;
 
-        public UserController(UserRepository repo, UserService userService)
+        public UserController(UserService userService)
         {
-            _repo = repo;
             _userService = userService;
         }
 

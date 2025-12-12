@@ -28,7 +28,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<ExpenseRepository>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserService>();
-//builder.Services.AddScoped<ExpenseService>();
+builder.Services.AddScoped<ExpenseService>();
 
 
 builder.Services.AddSession(options =>
@@ -68,6 +68,5 @@ using(var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.Migrate(); // creates tables automatically
 }
-
 
 app.Run();

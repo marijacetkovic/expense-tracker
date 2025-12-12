@@ -1,0 +1,140 @@
+@model ExpenseTracker.Models.AddExpenseViewModel
+@{
+    ViewData["Title"] = "Add Expense";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            
+            <div class="text-center mb-4">
+                <h2 class="fw-bold" style="letter-spacing: -0.03em;">Log New Transaction</h2>
+                <p class="text-muted small">Record shared expenses, define participants, and track payments.</p>
+            </div>
+
+            <div class="card-minimal p-4">
+                <form asp-action="ExpenseForm" method="post">
+
+                    <div class="mb-4">
+                        <label asp-for="Title" class="form-label"></label>
+                        <input asp-for="Title" class="form-control-minimal" placeholder="Dinner, Uber, Groceries..." />
+                        <span asp-validation-for="Title" class="text-danger small mt-1 d-block"></span>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="Amount" class="form-label"></label>
+                            <input asp-for="Amount" type="number" step="0.01" class="form-control-minimal" placeholder="0.00" />
+                            <span asp-validation-for="Amount" class="text-danger small mt-1 d-block"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Date" class="form-label"></label>
+                            <input asp-for="Date" type="date" class="form-control-minimal" />
+                            <span asp-validation-for="Date" class="text-danger small mt-1 d-block"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-5 p-3" style="border: 1px solid var(--border-color); border-radius: 4px;">
+                        
+                        <label class="form-label mb-3 fw-bold">Participants & Shares</label>
+                        
+                        <table class="table table-borderless table-sm mb-2" id="participantsTable">
+                            <thead>
+                                <tr class="border-bottom" style="font-size: 0.85rem; color: var(--color-gray);">
+                                    <th>USER</th>
+                                    <th style="width: 140px;">SHARE (€)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < Model.Participants?.Count; i++)
+                                {
+                                    <tr>
+                                        <td>
+                                            <input asp-for="Participants[@i].Username" class="form-control-minimal form-control-sm" placeholder="username" />
+                                            <span asp-validation-for="Participants[@i].Username" class="text-danger small mt-1 d-block"></span>
+                                        </td>
+                                        <td>
+                                            <input asp-for="Participants[@i].ShareAmount" type="number" step="0.01" class="form-control-minimal form-control-sm" placeholder="0.00" />
+                                            <span asp-validation-for="Participants[@i].ShareAmount" class="text-danger small mt-1 d-block"></span>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <button type="button" class="btn btn-sm btn-outline-danger removeBtn" style="width: 30px;">
+                                                <i class="bi bi-x-lg" style="font-size: 0.75rem;"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        
+                        <button type="button" class="btn btn-outline-dark btn-sm mt-3" id="addParticipantBtn">
+                            + Add Participant
+                        </button>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-minimal w-100">
+                        <i class="bi bi-check-lg me-2"></i> Save Expense
+                    </button>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Attach event listener to existing remove buttons (if any)
+        document.querySelectorAll(".removeBtn").forEach(btn => {
+            btn.addEventListener("click", function () {
+                btn.closest("tr").remove();
+                reindexParticipants();
+            });
+        });
+
+        document.getElementById("addParticipantBtn").addEventListener("click", function () {
+            const table = document.querySelector("#participantsTable tbody");
+            const rowCount = table.rows.length;
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>
+                    <input name="Participants[${rowCount}].Username" class="form-control-minimal form-control-sm" placeholder="username" />
+                </td>
+                <td>
+                    <input name="Participants[${rowCount}].ShareAmount" type="number" step="0.01" class="form-control-minimal form-control-sm" placeholder="0.00" />
+                </td>
+                <td class="align-middle text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger removeBtn" style="width: 30px;">
+                        <i class="bi bi-x-lg" style="font-size: 0.75rem;"></i>
+                    </button>
+                </td>
+            `;
+
+            table.appendChild(row);
+
+            // Attach remove listener to the newly created row
+            row.querySelector(".removeBtn").addEventListener("click", function () {
+                row.remove();
+                reindexParticipants();
+            });
+        });
+        
+        // Function to re-index array inputs after a row is removed, critical for MVC binding
+        function reindexParticipants() {
+            const rows = document.querySelectorAll("#participantsTable tbody tr");
+            rows.forEach((row, index) => {
+                row.querySelectorAll("input").forEach(input => {
+                    // Update input name attribute for MVC binding
+                    const name = input.name;
+                    if (name) {
+                        input.name = name.replace(/\[\d+\]./, `[${index}].`);
+                    }
+                });
+            });
+        }
+    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

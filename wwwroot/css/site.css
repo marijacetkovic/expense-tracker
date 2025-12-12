@@ -1,31 +1,74 @@
-html {
-  font-size: 14px;
-}
+/* wwwroot/css/site.css */
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+:root {
+    --font-main: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --color-black: #0f172a;
+    --color-gray: #64748b;
+    --border-color: #e2e8f0;
 }
 
 body {
-  margin-bottom: 60px;
+    font-family: var(--font-main);
+    color: var(--color-black);
+    background-color: #f8fafc; /* Very light gray background for contrast */
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+/* --- Minimal Card --- */
+.card-minimal {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    padding: 2rem;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+/* --- Minimal Form Inputs --- */
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-black);
+    margin-bottom: 0.5rem;
+}
+
+.form-control-minimal {
+    display: block;
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--color-black);
+    background-color: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.form-control-minimal:focus {
+    outline: none;
+    border-color: var(--color-black); /* Black border on focus */
+    box-shadow: 0 0 0 1px var(--color-black); /* subtle bold effect */
+}
+
+.form-control-minimal::placeholder {
+    color: #cbd5e1;
+}
+
+/* --- Minimal Buttons --- */
+.btn-primary-minimal {
+    background-color: var(--color-black);
+    color: white;
+    border: 1px solid var(--color-black);
+    border-radius: 4px;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-primary-minimal:hover {
+    background-color: #334155; /* Slightly lighter black/gray */
+    border-color: #334155;
+    color: white;
 }

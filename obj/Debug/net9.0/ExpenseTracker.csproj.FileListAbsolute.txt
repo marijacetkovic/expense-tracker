@@ -364,7 +364,6 @@
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/scopedcss/Views/Shared/_Layout.cshtml.rz.scp.css
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/scopedcss/bundle/ExpenseTracker.styles.css
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/scopedcss/projectbundle/ExpenseTracker.bundle.scp.css
-/Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/2kc4ra80sh-b9sayid5wm.gz
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/vlbca7txn3-61n19gt1b8.gz
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/s4zuzsw6nk-xtxxf3hu2r.gz
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/u2c8n3r5fl-bqjiyaj88i.gz
@@ -440,3 +439,4 @@
 /Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/y431f9po53-fowfwvk6mb.gz
 /Users/Asus/Projects/expense-tracker/bin/Debug/net9.0/MySqlConnector.dll
 /Users/Asus/Projects/expense-tracker/bin/Debug/net9.0/Pomelo.EntityFrameworkCore.MySql.dll
+/Users/Asus/Projects/expense-tracker/obj/Debug/net9.0/compressed/2kc4ra80sh-u54xt528my.gz

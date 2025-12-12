@@ -31,4 +31,6 @@ public class UserService
     }
 
     public Task<User?> GetUser(string username) => _repo.GetByUsernameAsync(username);
+
+    public Task<List<User>> GetAllUsers() => _repo.GetAllAsync();
 }
