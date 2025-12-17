@@ -11,7 +11,5 @@ public class User
     public string PasswordHash { get; set; } = null!;
     public string PasswordSalt { get; set; } = null!;
 
-    public string Role { get; set; } = "User";
-
     public string? Email { get; set; }
 }

@@ -6,6 +6,7 @@ public class Expense
     public string Name { get; set; }   
     public decimal Amount { get; set; } 
     public DateTime Date { get; set; }  
-
+    
+    //navigation property
     public List<ExpenseParticipants> Participants { get; set; } = new();
 }

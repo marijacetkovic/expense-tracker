@@ -52,7 +52,6 @@ namespace ExpenseTracker.Controllers
                 return View(model);
             }
             HttpContext.Session.SetInt32("UserId", user.Id);
-            HttpContext.Session.SetString("Role", user.Role);
 
             return RedirectToAction("Index", "Home");
         }
