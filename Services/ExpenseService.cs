@@ -5,11 +5,13 @@ public class ExpenseService
 {
     private readonly ExpenseRepository _repo;
     private readonly UserRepository _userRepo;
+    private readonly IEnumerable<IExpenseObserver> _observers;
 
-    public ExpenseService(ExpenseRepository repo, UserRepository userRepo)
+    public ExpenseService(ExpenseRepository repo, UserRepository userRepo, IEnumerable<IExpenseObserver> observers)
     {
         _repo = repo;
         _userRepo = userRepo;
+        _observers = observers;
     }
 
     public async Task<bool> AddExpenseAsync(string title, decimal amount, DateTime date, List<string> participantUsernames)
@@ -42,8 +44,13 @@ public class ExpenseService
             ShareAmount = amount / participants.Count
         }).ToList();
 
+        foreach (var observer in _observers){
+            expense.Attach(observer);
+        }
+
         await _repo.AddAsync(expense);
         await _repo.SaveChangesAsync();
+        await expense.NotifyAsync();
 
         return true;
     }

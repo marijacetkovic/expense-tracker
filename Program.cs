@@ -28,7 +28,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<ExpenseRepository>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddSingleton<IExpenseObserver, NotificationObserver>();
 builder.Services.AddScoped<ExpenseService>();
+
 
 
 builder.Services.AddSession(options =>

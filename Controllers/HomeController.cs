@@ -23,7 +23,7 @@ public class HomeController : Controller
         Console.WriteLine("---- Users List ----");
         foreach (var user in Users)
         {
-            Console.WriteLine($"ID: {user.Id}, Username: {user.Username}, Email: {user.Email}, Role: {user.Role}");
+            Console.WriteLine($"ID: {user.Id}, Username: {user.Username}, Email: {user.Email}");
         }
 
         return View();
