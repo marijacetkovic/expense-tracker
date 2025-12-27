@@ -9,4 +9,6 @@ public class ExpenseParticipants
     public int UserId { get; set; }
     public User? User { get; set; } 
     public decimal ShareAmount { get; set; }
+    //for settlements in the future
+    public string Status { get; set; } = "Pending";
 }

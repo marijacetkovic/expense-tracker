@@ -5,16 +5,14 @@ public class ExpenseService
 {
     private readonly ExpenseRepository _repo;
     private readonly UserRepository _userRepo;
-    private readonly IEnumerable<IExpenseObserver> _observers;
 
-    public ExpenseService(ExpenseRepository repo, UserRepository userRepo, IEnumerable<IExpenseObserver> observers)
+    public ExpenseService(ExpenseRepository repo, UserRepository userRepo)
     {
         _repo = repo;
         _userRepo = userRepo;
-        _observers = observers;
     }
 
-    public async Task<bool> AddExpenseAsync(string title, decimal amount, DateTime date, List<string> participantUsernames)
+    public async Task<bool> AddExpenseAsync(string title, decimal amount, DateTime date, List<string> participantUsernames, ISplitStrategy strategy)
     {
         if (participantUsernames == null || participantUsernames.Count == 0)
             return false;
@@ -27,31 +25,27 @@ public class ExpenseService
                 return false; 
             participants.Add(user);
         }
-
+        
+        var calculatedShares = strategy.CalculateShares(amount, participants.Count);
         // Create expense
         var expense = new Expense
         {
             Name = title,
-            Amount = amount,
             Date = date
         };
 
         // Create ExpenseParticipants
-        expense.Participants = participants.Select(u => new ExpenseParticipants
-        {
-            Expense = expense,
-            UserId = u.Id,
-            ShareAmount = amount / participants.Count
-        }).ToList();
-
-        foreach (var observer in _observers){
-            expense.Attach(observer);
+        for (int i = 0; i < participants.Count; i++){
+            expense.Participants.Add(new ExpenseParticipants
+            {
+                UserId = participants[i].Id,
+                ShareAmount = calculatedShares[i],
+                Status = "Pending"
+        });
         }
-
+       
         await _repo.AddAsync(expense);
         await _repo.SaveChangesAsync();
-        await expense.NotifyAsync();
-
         return true;
     }
 

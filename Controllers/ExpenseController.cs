@@ -24,7 +24,6 @@ namespace ExpenseTracker.Controllers
             {
                 Id = e.Id,
                 Name = e.Name,
-                Amount = e.Amount,
                 Date = e.Date,
             }).ToList();
 
@@ -41,12 +40,17 @@ namespace ExpenseTracker.Controllers
         {
             if (!ModelState.IsValid)
                 return View(model);
-
+            ISplitStrategy strategy = model.SplitType switch
+            {
+                SplitType.Equal => new EqualSplitStrategy(),
+                _ => throw new NotSupportedException()
+            };
             bool success = await _expenseService.AddExpenseAsync(
                 model.Title,
                 model.Amount,
                 model.Date,
-                model.Participants.Select(p => p.Username).ToList()
+                model.Participants.Select(p => p.Username).ToList(),
+                strategy
             );
 
             if (!success)

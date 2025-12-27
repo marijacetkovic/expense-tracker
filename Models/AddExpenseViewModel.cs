@@ -19,6 +19,7 @@ namespace ExpenseTracker.Models
         [Required]
         [DataType(DataType.Date)]
         public DateTime Date { get; set; }
+        public SplitType SplitType { get; set; } 
 
         public List<ParticipantViewModel> Participants { get; set; }
     }
