@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using ExpenseTracker.Strategies;
 
 namespace ExpenseTracker.Models
 {
@@ -22,11 +23,14 @@ namespace ExpenseTracker.Models
         public SplitType SplitType { get; set; } 
 
         public List<ParticipantViewModel> Participants { get; set; }
+        public int CreatedByUserId { get; internal set; }
     }
 
     public class ParticipantViewModel
     {
         public required string Username { get; set; }
         public decimal ShareAmount { get; set; }
+        public bool IsCurrentUser { get; set; }
+
     }
 }

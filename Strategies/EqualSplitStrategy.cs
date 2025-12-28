@@ -1,4 +1,5 @@
 using ExpenseTracker.Domain.Entities;
+namespace ExpenseTracker.Strategies;
 
 public class EqualSplitStrategy : ISplitStrategy
 {
@@ -12,6 +13,7 @@ public class EqualSplitStrategy : ISplitStrategy
         decimal currentSum = shares.Sum();
         if (currentSum != totalAmount)
         {
+            //add leftover amount to first participant to handle rounding
             shares[0] += totalAmount - currentSum; 
         }
         

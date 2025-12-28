@@ -16,7 +16,7 @@ public class HomeController : Controller
         _logger = logger;
         _userService = userService;
     }
-
+    // GET: /Home/Index
     public async Task<IActionResult> Index()
     {
         var Users = _userService.GetAllUsers().Result;

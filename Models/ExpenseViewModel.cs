@@ -9,5 +9,7 @@ namespace ExpenseTracker.Models
         public decimal Amount { get; set; } 
 
         public DateTime Date { get; set; } 
+        public int CreatedByUserId { get; set; } 
+        public int ParticipantCount { get; set; } 
     }
 }

@@ -1,5 +1,7 @@
 using ExpenseTracker.Data.Repositories;
 using ExpenseTracker.Domain.Entities;
+using ExpenseTracker.Models;
+using ExpenseTracker.Strategies;
 
 public class ExpenseService
 {
@@ -12,26 +14,27 @@ public class ExpenseService
         _userRepo = userRepo;
     }
 
-    public async Task<bool> AddExpenseAsync(string title, decimal amount, DateTime date, List<string> participantUsernames, ISplitStrategy strategy)
+    public async Task<bool> AddExpenseAsync(AddExpenseViewModel model, ISplitStrategy strategy, int creatorId)
     {
-        if (participantUsernames == null || participantUsernames.Count == 0)
+        if (model.Participants == null || model.Participants.Count == 0)
             return false;
 
         var participants = new List<User>();
-        foreach (var username in participantUsernames)
+        foreach (var participant in model.Participants)
         {
-            var user = await _userRepo.GetByUsernameAsync(username);
+            var user = await _userRepo.GetByUsernameAsync(participant.Username);
             if (user == null)
                 return false; 
             participants.Add(user);
         }
         
-        var calculatedShares = strategy.CalculateShares(amount, participants.Count);
+        var calculatedShares = strategy.CalculateShares(model.Amount, participants.Count);
         // Create expense
         var expense = new Expense
         {
-            Name = title,
-            Date = date
+            Name = model.Title,
+            Date = model.Date,
+            CreatedByUserId = creatorId
         };
 
         // Create ExpenseParticipants
@@ -49,8 +52,26 @@ public class ExpenseService
         return true;
     }
 
-    public async Task<List<Expense>> GetAllUserExpensesAsync()
+    public async Task<Expense?> GetExpenseWithParticipantsAsync(int id)
     {
-        return await _repo.GetAllExpensesAsync();
+        return await _repo.GetExpenseWithParticipantsAsync(id);
+    }
+    public async Task<List<Expense>> GetAllUserExpensesAsync(int userId)
+    {
+        return await _repo.GetExpensesByUserIdAsync(userId);
+    }   
+
+
+
+    public async Task<bool> DeleteExpenseAsync(int expenseId, int userId)
+    {
+        var expense = await _repo.GetByIdAsync(expenseId);
+
+        // only the creator can delete
+        if (expense == null || expense.CreatedByUserId != userId) return false;
+
+        await _repo.DeleteAsync(expense);
+        await _repo.SaveChangesAsync();
+        return true;
     }
 }

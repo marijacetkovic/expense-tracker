@@ -1,3 +1,5 @@
+namespace ExpenseTracker.Strategies;
+
 public enum SplitType { Equal }
 public interface ISplitStrategy
 {
