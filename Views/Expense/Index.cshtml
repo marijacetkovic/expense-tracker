@@ -1,8 +1,8 @@
-@model IEnumerable<ExpenseTracker.Models.ExpenseViewModel>
 @using Microsoft.AspNetCore.Http
 @{
     ViewData["Title"] = "History";
-    var currentUserId = Context.Session.GetInt32("UserId");
+    // We only need the Session ID here for the initial script setup
+    var sessionUserId = Context.Session.GetInt32("UserId") ?? 0;
 }
 
 <div class="container mt-5 mb-5" style="max-width: 1000px;">
@@ -11,12 +11,12 @@
             <h2 class="fw-bold m-0" style="letter-spacing: -0.02em;">Expense History</h2>
             <p class="text-muted small mb-0">Tap a transaction to see the full breakdown.</p>
         </div>
-        <a asp-controller="Expense" asp-action="ExpenseForm" class="btn btn-primary-minimal shadow-sm">
+        <a href="/Expense/ExpenseForm" class="btn btn-dark shadow-sm px-4">
             <i class="bi bi-plus-lg me-1"></i> New Expense
         </a>
     </div>
 
-    <div class="card-minimal shadow-sm border-0 overflow-hidden">
+    <div class="card border-0 shadow-sm overflow-hidden">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="bg-light border-bottom">
@@ -27,33 +27,13 @@
                         <th class="text-end pe-4 py-3" style="width: 20%;">Total</th>
                     </tr>
                 </thead>
-                <tbody class="border-top-0">
-                    @foreach (var item in Model)
-                    {
-                        <tr class="clickable-row transition-base" 
-                            data-href="@Url.Action("ExpenseDetails", "Expense", new { id = item.Id })">
-                            <td class="ps-4 text-muted">
-                                @item.Date.ToString("MMM dd")
-                            </td>
-                            <td>
-                                <span class="fw-bold text-dark">@item.Name</span>
-                            </td>
-                            <td>
-                                @if (item.CreatedByUserId == currentUserId)
-                                {
-                                    <span class="badge rounded-pill bg-dark-subtle text-dark border-0 px-3 py-2 fw-normal">Owner</span>
-                                }
-                                else
-                                {
-                                    <span class="badge rounded-pill bg-light text-muted border px-3 py-2 fw-normal">Participant</span>
-                                }
-                            </td>
-                            <td class="text-end pe-4">
-                                <span class="fw-bold text-primary fs-6">€@item.Amount.ToString("N2")</span>
-                                <i class="bi bi-chevron-right ms-2 text-muted small opacity-50"></i>
-                            </td>
-                        </tr>
-                    }
+                <tbody id="historyBody" class="border-top-0">
+                    <tr>
+                        <td colspan="4" class="text-center py-5">
+                            <div class="spinner-border spinner-border-sm text-muted me-2"></div>
+                            <span class="text-muted">Loading history...</span>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -61,39 +41,73 @@
 </div>
 
 <style>
-    /* Professional Hover Effect */
-    .clickable-row {
-        cursor: pointer;
-        transition: all 0.15s ease-in-out;
-    }
-    
-    .clickable-row:hover {
-        background-color: #f8faff !important;
-        transform: scale(1.002);
-    }
-
-    .transition-base {
-        transition: background-color 0.2s ease;
-    }
-
-    .badge {
-        font-size: 0.75rem;
-    }
+    .clickable-row { cursor: pointer; transition: all 0.15s ease-in-out; }
+    .clickable-row:hover { background-color: #f8faff !important; }
+    .bg-dark-subtle { background-color: #e9ecef !important; }
 </style>
 
 @section Scripts {
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const rows = document.querySelectorAll(".clickable-row");
-            rows.forEach(row => {
-                row.addEventListener("click", (e) => {
-                    // Safety check: Don't redirect if the user clicks a button or link inside the row
-                    if (e.target.closest('button') || e.target.closest('a')) return;
+        // Use the ID from Session to identify the 'Owner'
+        const currentUserId = @sessionUserId;
+
+        async function loadHistory() {
+            const tbody = document.getElementById('historyBody');
+            
+            try {
+                const response = await fetch('/api/expenseapi');
+                
+                if (response.status === 401) {
+                    window.location.href = '/User/Login';
+                    return;
+                }
+
+                const expenses = await response.json();
+
+                if (!expenses || expenses.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted">No expenses recorded yet.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = expenses.map(item => {
+                    const dateObj = new Date(item.timestamp);
+                    const isValidDate = !isNaN(dateObj.getTime());
                     
-                    const url = row.getAttribute("data-href");
-                    if (url) window.location.href = url;
-                });
-            });
-        });
+                    const displayDate = isValidDate 
+                        ? dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit' })
+                        : "---";
+                    
+                    // Added time display for better insight as per seminar updates
+                    const displayTime = isValidDate
+                        ? dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+                        : "";
+                    return`
+                    <tr class="clickable-row" onclick="window.location.href='/Expense/ExpenseDetails/${item.id}'">
+                        <td class="ps-4">
+                                <div class="text-dark fw-medium">${displayDate}</div>
+                                <div class="text-muted" style="font-size: 0.7rem;">${displayTime}</div>
+                            </td>
+                            <td>
+                                <span class="fw-bold text-dark">${item.name}</span>
+                            </td>
+                        <td>
+                            ${item.createdByUserId === currentUserId 
+                                ? '<span class="badge rounded-pill bg-dark-subtle text-dark border-0 px-3 py-2 fw-normal">Owner</span>' 
+                                : '<span class="badge rounded-pill bg-light text-muted border px-3 py-2 fw-normal">Participant</span>'}
+                        </td>
+                        <td class="text-end pe-4">
+                            <span class="fw-bold text-primary fs-6">€${item.amount.toFixed(2)}</span>
+                            <i class="bi bi-chevron-right ms-2 text-muted small opacity-50"></i>
+                        </td>
+                    </tr>
+                `}).join('');
+
+            } catch (err) {
+                console.error("API Error:", err);
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-danger">Failed to load history.</td></tr>';
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadHistory);
     </script>
 }

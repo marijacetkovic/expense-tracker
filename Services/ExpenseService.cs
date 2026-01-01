@@ -33,7 +33,7 @@ public class ExpenseService
         var expense = new Expense
         {
             Name = model.Title,
-            Date = model.Date,
+            Timestamp = model.Timestamp,
             CreatedByUserId = creatorId
         };
 
@@ -71,6 +71,41 @@ public class ExpenseService
         if (expense == null || expense.CreatedByUserId != userId) return false;
 
         await _repo.DeleteAsync(expense);
+        await _repo.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> UpdateExpenseAsync(int id, AddExpenseViewModel model, ISplitStrategy strategy)
+    {
+        var expense = await _repo.GetExpenseWithParticipantsAsync(id);
+        if (expense == null) return false;
+
+        expense.Name = model.Title;
+        expense.Timestamp = model.Timestamp;
+
+        var newParticipants = new List<User>();
+        foreach (var p in model.Participants)
+        {
+            var user = await _userRepo.GetByUsernameAsync(p.Username);
+            if (user == null) return false; // Fail if any username is invalid
+            newParticipants.Add(user);
+        }
+
+        var calculatedShares = strategy.CalculateShares(model.Amount, newParticipants.Count);
+
+        expense.Participants.Clear();
+
+        for (int i = 0; i < newParticipants.Count; i++)
+        {
+            expense.Participants.Add(new ExpenseParticipants
+            {
+                ExpenseId = id,
+                UserId = newParticipants[i].Id,
+                ShareAmount = calculatedShares[i],
+                Status = "Pending" 
+            });
+        }
+        await _repo.UpdateAsync(expense);
         await _repo.SaveChangesAsync();
         return true;
     }

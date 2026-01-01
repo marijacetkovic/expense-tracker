@@ -1,6 +1,7 @@
-@model ExpenseTracker.Models.AddExpenseViewModel
+@using Microsoft.AspNetCore.Http
 @{
     ViewData["Title"] = "Add Expense";
+    var currentUser = Context.Session.GetString("Username") ?? "";
 }
 
 <div class="container mt-5 mb-5">
@@ -11,37 +12,36 @@
                 <p class="text-muted small">Record shared expenses, define participants, and track payments.</p>
             </div>
 
-            <div class="card-minimal p-4">
+            <div class="card border-0 shadow-sm p-4 rounded-4">
                 <form id="expenseForm">
-
                     <div class="mb-4">
-                        <label asp-for="Title" class="form-label">Description</label>
-                        <input asp-for="Title" id="Title" class="form-control-minimal" placeholder="Dinner, Uber, Groceries..." required />
+                        <label class="form-label small text-muted fw-bold">DESCRIPTION</label>
+                        <input type="text" id="Title" class="form-control shadow-none" placeholder="Dinner, Uber, Groceries..." required />
                     </div>
 
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
-                            <label asp-for="Amount" class="form-label">Total Amount (€)</label>
-                            <input asp-for="Amount" id="Amount" type="number" step="0.01" class="form-control-minimal" placeholder="0.00" required />
+                            <label class="form-label small text-muted fw-bold">TOTAL AMOUNT (€)</label>
+                            <input id="Amount" type="number" step="0.01" class="form-control shadow-none" placeholder="0.00" required />
                         </div>
                         <div class="col-md-4">
-                            <label asp-for="Date" class="form-label">Date</label>
-                            <input asp-for="Date" id="Date" type="date" class="form-control-minimal" required />
+                            <label class="form-label small text-muted fw-bold">DATE</label>
+                            <input id="Date" type="datetime-local" class="form-control shadow-none" required />
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Split Method</label>
-                            <select id="SplitType" class="form-control-minimal">
+                            <label class="form-label small text-muted fw-bold">SPLIT METHOD</label>
+                            <select id="SplitType" class="form-select shadow-none">
                                 <option value="0">Equal Split</option>
                             </select>
                         </div>
                     </div>
 
-                    <div class="mb-5 p-3" style="border: 1px solid var(--border-color); border-radius: 4px;">
+                    <div class="mb-5 p-3 border rounded">
                         <label class="form-label mb-3 fw-bold">Participants</label>
                         
                         <table class="table table-borderless table-sm mb-2" id="participantsTable">
                             <thead>
-                                <tr class="border-bottom" style="font-size: 0.85rem; color: var(--color-gray);">
+                                <tr class="border-bottom" style="font-size: 0.85rem; color: #6c757d;">
                                     <th>PARTICIPANT USERNAME</th>
                                     <th style="width: 50px;"></th>
                                 </tr>
@@ -50,14 +50,14 @@
                                 </tbody>
                         </table>
                         
-                        <button type="button" class="btn btn-outline-dark btn-sm mt-3" id="addParticipantBtn">
-                            + Add Participant
+                        <button type="button" class="btn btn-outline-dark btn-sm mt-2" id="addParticipantBtn">
+                            <i class="bi bi-person-plus me-1"></i> Add Participant
                         </button>
                     </div>
 
                     <div id="errorSummary" class="alert alert-danger py-2 small mb-4 d-none"></div>
 
-                    <button type="submit" class="btn btn-primary-minimal w-100">
+                    <button type="submit" class="btn btn-dark w-100 py-3 fw-bold rounded-3">
                         <i class="bi bi-check-lg me-2"></i> Save Expense
                     </button>
                 </form>
@@ -68,92 +68,182 @@
 
 @section Scripts {
     <script>
-        
-        const currentUser = "@Context.Session.GetString("Username")";
-        const expenseForm = document.getElementById('expenseForm');
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('editId'); //check edit mode
+        const currentUser = "@currentUser";
+
+        if (!currentUser) window.location.href = '/User/Login';
+
         const participantsTableBody = document.querySelector("#participantsTable tbody");
         const errorBox = document.getElementById('errorSummary');
 
-        
         function addParticipantRow(username = "", isFixed = false) {
-            const row = document.createElement("tr");
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td class="position-relative">
+                <input class="form-control username-input" 
+                    value="${username}" 
+                    autocomplete="off"
+                    ${isFixed ? 'readonly style="background-color: #f8f9fa;"' : ''} 
+                    placeholder="Enter username" required />
+                <div class="autocomplete-suggestions list-group position-absolute w-100 shadow-sm d-none" 
+                    style="z-index: 1000; max-height: 200px; overflow-y: auto; top: 100%;">
+                </div>
+            </td>
+            <td class="align-middle text-center">
+                ${isFixed ? 
+                    '<span class="badge bg-light text-dark border">You</span>' : 
+                    '<button type="button" class="btn btn-sm btn-outline-danger removeBtn">&times;</button>'}
+            </td>
+        `;
+        participantsTableBody.appendChild(row);
 
-            row.innerHTML = `
-                <td>
-                    <input class="form-control-minimal form-control-sm username-input" 
-                           value="${username}" 
-                           ${isFixed ? 'readonly style="background-color: #f8f9fa; color: #6c757d;"' : ''} 
-                           placeholder="username" required />
-                </td>
-                <td class="align-middle text-center">
-                    ${isFixed ? 
-                        '<span class="badge bg-light text-dark border">You</span>' : 
-                        '<button type="button" class="btn btn-sm btn-outline-danger removeBtn" style="width: 30px;">&times;</button>'}
-                </td>
-            `;
-            
-            participantsTableBody.appendChild(row);
+        const input = row.querySelector(".username-input");
+        const suggestionsBox = row.querySelector(".autocomplete-suggestions");
 
-            // Attach delete event if not the owner
-            if (!isFixed) {
-                row.querySelector(".removeBtn").addEventListener("click", () => row.remove());
+        if (!isFixed) {
+            let timeout = null;
+
+            input.addEventListener("input", () => {
+                clearTimeout(timeout);
+                const term = input.value.trim();
+
+                if (term.length < 3) {
+                    suggestionsBox.classList.add("d-none");
+                    return;
+                }
+
+                timeout = setTimeout(async () => {
+                    try {
+                        const res = await fetch(`/api/userapi/search?term=${encodeURIComponent(term)}`);
+                        if (res.ok) {
+                            const users = await res.json();
+                            if (users.length > 0) {
+                                suggestionsBox.innerHTML = users.map(u => `
+                                    <button type="button" class="list-group-item list-group-item-action py-2 small">
+                                        ${u}
+                                    </button>
+                                `).join('');
+                                suggestionsBox.classList.remove("d-none");
+
+                                // Click suggestion
+                                suggestionsBox.querySelectorAll("button").forEach(btn => {
+                                    btn.onclick = () => {
+                                        input.value = btn.innerText.trim();
+                                        suggestionsBox.classList.add("d-none");
+                                    };
+                                });
+                            } else {
+                                suggestionsBox.classList.add("d-none");
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Search error:", err);
+                    }
+                }, 300);
+            });
+
+            document.addEventListener("click", (e) => {
+                if (!row.contains(e.target)) suggestionsBox.classList.add("d-none");
+            });
+
+            row.querySelector(".removeBtn").onclick = () => row.remove();
+        }
+    }
+
+    async function loadExistingData() {
+        if (!editId) {
+            addParticipantRow(currentUser, true);
+            return;
+        }
+
+            const res = await fetch(`/api/expenseapi/${editId}`);
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('Title').value = data.name;
+                document.getElementById('Amount').value = data.totalAmount;
+                if (data.timestamp) {
+                    // Replace space with T and take only YYYY-MM-DDTHH:mm
+                    document.getElementById('Date').value = data.timestamp.replace(' ', 'T').slice(0, 16);
+                }
+                document.getElementById('SplitType').value = data.splitType || 0;
+                
+                participantsTableBody.innerHTML = ""; 
+                data.participants.forEach(p => {
+                    addParticipantRow(p.username, p.username === currentUser);
+                });
             }
         }
 
-        
         document.addEventListener("DOMContentLoaded", () => {
-            // Clear table and add the owner
-            participantsTableBody.innerHTML = "";
+            if (!editId) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const localDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            
+            document.getElementById('Date').value = localDateTime;
             addParticipantRow(currentUser, true);
+            } else {
+                loadExistingData();
+            }
         });
 
-        // Add Participant Button click handler
-        document.getElementById("addParticipantBtn").addEventListener("click", () => {
-            addParticipantRow();
-        });
+        document.getElementById("addParticipantBtn").onclick = () => addParticipantRow();
 
-        //Form Submission
-        expenseForm.addEventListener('submit', async function (e) {
+        document.getElementById('expenseForm').onsubmit = async function (e) {
             e.preventDefault();
-
             errorBox.classList.add('d-none');
-            errorBox.innerHTML = '';
 
-            const participantRows = document.querySelectorAll("#participantsTable tbody tr");
-            const participants = Array.from(participantRows).map(row => ({
-                username: row.querySelector(".username-input").value.trim()
+            const inputs = document.querySelectorAll(".username-input");
+            const participantObjects = Array.from(inputs).map(input => ({
+                username: input.value.trim()
             }));
+            const usernames = participantObjects.map(p => p.username);
+            const hasDuplicates = usernames.some((name, index) => usernames.indexOf(name) !== index);
+    
+            if (hasDuplicates) {
+                errorBox.innerText = "Error: You cannot add the same participant twice.";
+                errorBox.classList.remove('d-none');
+                return; 
+            }
 
             const payload = {
                 title: document.getElementById('Title').value,
                 amount: parseFloat(document.getElementById('Amount').value),
-                date: document.getElementById('Date').value,
-                splitType: 0, // Equal Split
-                participants: participants
+                timestamp: document.getElementById('Date').value,
+                splitType: parseInt(document.getElementById('SplitType').value),
+                participants: participantObjects 
             };
+            //print payload
+            console.log(payload);
+            const method = editId ? 'PUT' : 'POST';
+            const url = editId ? `/api/expenseapi/${editId}` : '/api/expenseapi';
 
             try {
-                const response = await fetch('/api/expenseapi', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json'
-                    },
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
                 if (response.ok) {
-                    // Status 201 Created
                     window.location.href = '/Expense/Index';
+                } else if (response.status === 401) {
+                    window.location.href = '/User/Login';
                 } else {
                     const data = await response.json();
-                    errorBox.innerHTML = data.message || "An error occurred while saving the expense.";
+                    errorBox.innerText = data.message || "Error saving expense. Check all fields.";
                     errorBox.classList.remove('d-none');
                 }
             } catch (err) {
-                console.error("Fetch error:", err);
-                errorBox.innerHTML = "Connection to server failed. Please try again.";
+                errorBox.innerText = "Connection failed.";
                 errorBox.classList.remove('d-none');
             }
-        });
+        };
     </script>
 }

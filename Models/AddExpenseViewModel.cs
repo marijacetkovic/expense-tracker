@@ -19,7 +19,7 @@ namespace ExpenseTracker.Models
 
         [Required]
         [DataType(DataType.Date)]
-        public DateTime Date { get; set; }
+        public DateTime Timestamp { get; set; }
         public SplitType SplitType { get; set; } 
 
         public List<ParticipantViewModel> Participants { get; set; }
@@ -28,7 +28,7 @@ namespace ExpenseTracker.Models
 
     public class ParticipantViewModel
     {
-        public required string Username { get; set; }
+        public string Username { get; set; }
         public decimal ShareAmount { get; set; }
         public bool IsCurrentUser { get; set; }
 

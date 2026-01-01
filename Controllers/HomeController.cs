@@ -19,13 +19,7 @@ public class HomeController : Controller
     // GET: /Home/Index
     public async Task<IActionResult> Index()
     {
-        var Users = _userService.GetAllUsers().Result;
-        Console.WriteLine("---- Users List ----");
-        foreach (var user in Users)
-        {
-            Console.WriteLine($"ID: {user.Id}, Username: {user.Username}, Email: {user.Email}");
-        }
-
+    
         return View();
     }
 

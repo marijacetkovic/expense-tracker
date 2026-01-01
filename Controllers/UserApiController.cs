@@ -46,4 +46,16 @@ public class UserApiController : ControllerBase
 
         return Ok(new { message = "Login successful" }); // 200 OK
     }
+
+    // GET: api/userapi/search?term=abc
+[HttpGet("search")]
+public async Task<IActionResult> SearchUsers(string term)
+{
+    //need first 3 characters to search
+    if (string.IsNullOrWhiteSpace(term) || term.Length < 3)
+        return Ok(new List<string>());
+
+    var results = await _userService.SearchUsernamesAsync(term); 
+    return Ok(results);
+}
 }

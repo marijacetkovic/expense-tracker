@@ -33,4 +33,14 @@ public class UserService
     public Task<User?> GetUser(string username) => _repo.GetByUsernameAsync(username);
 
     public Task<List<User>> GetAllUsers() => _repo.GetAllAsync();
+
+    public async Task<List<string>> SearchUsernamesAsync(string term)
+    {
+        term = term.Trim().ToLower();
+        var users = await _repo.GetAllAsync();
+        return users
+            .Where(u => u.Username.StartsWith(term))
+            .Select(u => u.Username)
+            .ToList();
+    }
 }

@@ -21,7 +21,7 @@ public class ExpenseRepository
         .Include(e => e.Participants)
         .ThenInclude(ep => ep.User)
         .Where(e => e.Participants.Any(ep => ep.UserId == userId))
-        .OrderByDescending(e => e.Date)
+        .OrderByDescending(e => e.Timestamp)
         .ToListAsync();
     }
 
