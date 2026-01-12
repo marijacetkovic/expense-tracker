@@ -23,7 +23,6 @@ public class ExpenseApiController : ControllerBase
 
             var domainExpenses = await _expenseService.GetAllUserExpensesAsync(userId.Value);
 
-            // Mapping to the ViewModel structure your JavaScript expects
             var result = domainExpenses.Select(e => new 
             {
                 id = e.Id,
@@ -47,7 +46,6 @@ public class ExpenseApiController : ControllerBase
             var expense = await _expenseService.GetExpenseWithParticipantsAsync(id);
             if (expense == null) return NotFound();
 
-            // Mapping to JSON structure
             var result = new
             {
                 id = expense.Id,
@@ -72,18 +70,21 @@ public class ExpenseApiController : ControllerBase
     public async Task<IActionResult> Create([FromBody] AddExpenseViewModel model)
     {
         var currentUserId = HttpContext.Session.GetInt32("UserId");
-
         if (currentUserId == null)
-        {
             return Unauthorized(new { message = "Session expired. Please login again." });
-        }
 
         var strategy = SplitStrategyFactory.Create(model.SplitType);
-        bool success = await _expenseService.AddExpenseAsync(model, strategy, currentUserId.Value);
 
-        if (!success) return UnprocessableEntity();
-        return StatusCode(201); // Created
+        var validationError = strategy.Validate(model.Amount, model.Participants.Count, model.SplitValues);
+        if (validationError != null) return BadRequest(new { message = validationError });
+
+        bool success = await _expenseService.AddExpenseAsync(model, strategy, currentUserId.Value);
+        if (!success) return BadRequest(new { message = "Failed to create expense." });
+
+        return StatusCode(201);
     }
+
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -100,11 +101,20 @@ public class ExpenseApiController : ControllerBase
     public async Task<IActionResult> UpdateExpense(int id, [FromBody] AddExpenseViewModel model)
     {
         var userId = HttpContext.Session.GetInt32("UserId");
-        if (userId == null) return Unauthorized();//401
-        var success = await _expenseService.UpdateExpenseAsync(id, model, SplitStrategyFactory.Create(model.SplitType));
-        if (!success) return Forbid(); //403
+        if (userId == null) return Unauthorized(); // 401
 
-        return NoContent(); // 204 means "I did it, nothing more to show"
-        }
+        var strategy = SplitStrategyFactory.Create(model.SplitType);
+
+        var validationError = strategy.Validate(model.Amount, model.Participants.Count, model.SplitValues);
+        if (validationError != null)
+            return BadRequest(new { message = validationError }); // 400
+
+        var success = await _expenseService.UpdateExpenseAsync(id, model, strategy);
+        if (!success) return Forbid(); // 403
+
+        return NoContent(); // 204
+    }
+
+   
 
 }

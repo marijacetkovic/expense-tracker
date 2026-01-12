@@ -28,7 +28,7 @@ public class ExpenseService
             participants.Add(user);
         }
         
-        var calculatedShares = strategy.CalculateShares(model.Amount, participants.Count);
+        var calculatedShares = strategy.CalculateShares(model.Amount, participants.Count, model.SplitValues);
         // Create expense
         var expense = new Expense
         {
@@ -91,7 +91,7 @@ public class ExpenseService
             newParticipants.Add(user);
         }
 
-        var calculatedShares = strategy.CalculateShares(model.Amount, newParticipants.Count);
+        var calculatedShares = strategy.CalculateShares(model.Amount, newParticipants.Count, model.SplitValues);
 
         expense.Participants.Clear();
 

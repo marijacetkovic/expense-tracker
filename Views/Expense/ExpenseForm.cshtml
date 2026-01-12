@@ -32,6 +32,8 @@
                             <label class="form-label small text-muted fw-bold">SPLIT METHOD</label>
                             <select id="SplitType" class="form-select shadow-none">
                                 <option value="0">Equal Split</option>
+                                <option value="1">Exact Amount Split</option>
+                                <option value="2">Percentage Split</option>
                             </select>
                         </div>
                     </div>
@@ -42,13 +44,16 @@
                         <table class="table table-borderless table-sm mb-2" id="participantsTable">
                             <thead>
                                 <tr class="border-bottom" style="font-size: 0.85rem; color: #6c757d;">
-                                    <th>PARTICIPANT USERNAME</th>
-                                    <th style="width: 50px;"></th>
-                                </tr>
+<th style="width: 55%;">PARTICIPANT USERNAME</th>
+            <th style="width: 30%;">SHARE</th>
+            <th style="width: 15%; text-center"></th>                                
+            </tr>
                             </thead>
                             <tbody>
                                 </tbody>
                         </table>
+                        <div id="splitValuesContainer" class="mb-4"></div>
+
                         
                         <button type="button" class="btn btn-outline-dark btn-sm mt-2" id="addParticipantBtn">
                             <i class="bi bi-person-plus me-1"></i> Add Participant
@@ -77,79 +82,91 @@
         const participantsTableBody = document.querySelector("#participantsTable tbody");
         const errorBox = document.getElementById('errorSummary');
 
+        
+
         function addParticipantRow(username = "", isFixed = false) {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td class="position-relative">
-                <input class="form-control username-input" 
-                    value="${username}" 
-                    autocomplete="off"
-                    ${isFixed ? 'readonly style="background-color: #f8f9fa;"' : ''} 
-                    placeholder="Enter username" required />
-                <div class="autocomplete-suggestions list-group position-absolute w-100 shadow-sm d-none" 
-                    style="z-index: 1000; max-height: 200px; overflow-y: auto; top: 100%;">
-                </div>
-            </td>
-            <td class="align-middle text-center">
-                ${isFixed ? 
-                    '<span class="badge bg-light text-dark border">You</span>' : 
-                    '<button type="button" class="btn btn-sm btn-outline-danger removeBtn">&times;</button>'}
-            </td>
-        `;
-        participantsTableBody.appendChild(row);
+    const row = document.createElement("tr");
+   row.innerHTML = `
+        <td class="position-relative">
+            <input class="form-control username-input" 
+                value="${username}" 
+                autocomplete="off"
+                ${isFixed ? 'readonly style="background-color: #f8f9fa;"' : ''} 
+                placeholder="Enter username" required />
+            <div class="autocomplete-suggestions list-group position-absolute w-100 shadow-sm d-none" 
+                style="z-index: 1000; max-height: 200px; overflow-y: auto; top: 100%;">
+            </div>
+        </td>
+        <td class="align-middle">
+            <input type="number" min="0" step="0.01" class="form-control split-value-input" 
+                placeholder="${splitTypeSelect.value == '2' ? 'Percentage' : 'Amount'}"
+                ${splitTypeSelect.value == '0' ? 'readonly style="background-color:#e9ecef;"' : ''} />
+        </td>
+        <td class="align-middle text-center">
+            ${isFixed ? 
+                '<span class="badge bg-light text-dark border">You</span>' : 
+                '<button type="button" class="btn btn-sm btn-outline-danger removeBtn">&times;</button>'}
+        </td>
+    `;
+    participantsTableBody.appendChild(row);
 
-        const input = row.querySelector(".username-input");
-        const suggestionsBox = row.querySelector(".autocomplete-suggestions");
+    const input = row.querySelector(".username-input");
+    const suggestionsBox = row.querySelector(".autocomplete-suggestions");
+    const splitInput = row.querySelector(".split-value-input");
 
-        if (!isFixed) {
-            let timeout = null;
+    if (!isFixed) {
+        let timeout = null;
 
-            input.addEventListener("input", () => {
-                clearTimeout(timeout);
-                const term = input.value.trim();
+        input.addEventListener("input", () => {
+            clearTimeout(timeout);
+            const term = input.value.trim();
 
-                if (term.length < 3) {
-                    suggestionsBox.classList.add("d-none");
-                    return;
-                }
+            if (term.length < 3) {
+                suggestionsBox.classList.add("d-none");
+                return;
+            }
 
-                timeout = setTimeout(async () => {
-                    try {
-                        const res = await fetch(`/api/userapi/search?term=${encodeURIComponent(term)}`);
-                        if (res.ok) {
-                            const users = await res.json();
-                            if (users.length > 0) {
-                                suggestionsBox.innerHTML = users.map(u => `
-                                    <button type="button" class="list-group-item list-group-item-action py-2 small">
-                                        ${u}
-                                    </button>
-                                `).join('');
-                                suggestionsBox.classList.remove("d-none");
+            timeout = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/userapi/search?term=${encodeURIComponent(term)}`);
+                    if (res.ok) {
+                        const users = await res.json();
+                        if (users.length > 0) {
+                            suggestionsBox.innerHTML = users.map(u => `
+                                <button type="button" class="list-group-item list-group-item-action py-2 small">
+                                    ${u}
+                                </button>
+                            `).join('');
+                            suggestionsBox.classList.remove("d-none");
 
-                                // Click suggestion
-                                suggestionsBox.querySelectorAll("button").forEach(btn => {
-                                    btn.onclick = () => {
-                                        input.value = btn.innerText.trim();
-                                        suggestionsBox.classList.add("d-none");
-                                    };
-                                });
-                            } else {
-                                suggestionsBox.classList.add("d-none");
-                            }
+                            suggestionsBox.querySelectorAll("button").forEach(btn => {
+                                btn.onclick = () => {
+                                    input.value = btn.innerText.trim();
+                                    suggestionsBox.classList.add("d-none");
+                                    splitInput.placeholder = splitTypeSelect.value == '2' ? 'Percentage' : 'Amount';
+                                };
+                            });
+                        } else {
+                            suggestionsBox.classList.add("d-none");
                         }
-                    } catch (err) {
-                        console.error("Search error:", err);
                     }
-                }, 300);
-            });
+                } catch (err) {
+                    console.error("Search error:", err);
+                }
+            }, 300);
+        });
 
-            document.addEventListener("click", (e) => {
-                if (!row.contains(e.target)) suggestionsBox.classList.add("d-none");
-            });
+        document.addEventListener("click", (e) => {
+            if (!row.contains(e.target)) suggestionsBox.classList.add("d-none");
+        });
 
-            row.querySelector(".removeBtn").onclick = () => row.remove();
-        }
+        row.querySelector(".removeBtn").onclick = () => {
+            row.remove();
+        };
     }
+}
+
+
 
     async function loadExistingData() {
         if (!editId) {
@@ -203,13 +220,37 @@
             const participantObjects = Array.from(inputs).map(input => ({
                 username: input.value.trim()
             }));
+
             const usernames = participantObjects.map(p => p.username);
             const hasDuplicates = usernames.some((name, index) => usernames.indexOf(name) !== index);
-    
+
             if (hasDuplicates) {
                 errorBox.innerText = "Error: You cannot add the same participant twice.";
                 errorBox.classList.remove('d-none');
                 return; 
+            }
+
+            // Gather split values
+            const splitValues = Array.from(document.querySelectorAll(".split-value-input"))
+                .map(input => parseFloat(input.value));
+            const splitType = document.getElementById("SplitType").value;
+
+            if (splitType === "1" || splitType === "2") { 
+                if (splitValues.some(val => isNaN(val) || val <= 0)) {
+                    errorBox.innerText = "Please provide a valid amount/percentage for all participants.";
+                    errorBox.classList.remove('d-none');
+                    return;
+                }
+                
+                if (splitType === "1") {
+                    const total = parseFloat(document.getElementById('Amount').value);
+                    const sum = splitValues.reduce((a, b) => a + b, 0);
+                    if (Math.abs(total - sum) > 0.01) {
+                        errorBox.innerText = `The sum of shares (${sum}) must equal the total amount (${total}).`;
+                        errorBox.classList.remove('d-none');
+                        return;
+                    }
+                }
             }
 
             const payload = {
@@ -217,9 +258,10 @@
                 amount: parseFloat(document.getElementById('Amount').value),
                 timestamp: document.getElementById('Date').value,
                 splitType: parseInt(document.getElementById('SplitType').value),
-                participants: participantObjects 
+                participants: participantObjects,
+                splitValues: splitValues.length > 0 ? splitValues : null
             };
-            //print payload
+
             console.log(payload);
             const method = editId ? 'PUT' : 'POST';
             const url = editId ? `/api/expenseapi/${editId}` : '/api/expenseapi';
@@ -245,5 +287,40 @@
                 errorBox.classList.remove('d-none');
             }
         };
+
+
+        const splitTypeSelect = document.getElementById("SplitType");
+        const splitValuesContainer = document.getElementById("splitValuesContainer");
+
+    function renderSplitInputs() {
+        const participantRows = document.querySelectorAll("#participantsTable tbody tr");
+
+        participantRows.forEach(row => {
+            const splitInput = row.querySelector(".split-value-input");
+            if (!splitInput) return;
+
+            splitInput.placeholder = splitTypeSelect.value == '2' ? 'Percentage' : 'Amount';
+
+            if (splitTypeSelect.value == '0') {
+                // Equal split: disable input
+                splitInput.value = '';
+                splitInput.readOnly = true;
+                splitInput.style.backgroundColor = '#e9ecef';
+            } else {
+                // Exact or Percentage: enable input
+                splitInput.readOnly = false;
+                splitInput.style.backgroundColor = '';
+            }
+        });
+    }
+
+
+
+        // Update inputs whenever split type or participants change
+        splitTypeSelect.addEventListener("change", renderSplitInputs);
+        document.getElementById("addParticipantBtn").addEventListener("click", () => {
+            setTimeout(renderSplitInputs, 50); // wait for new participant row to render
+        });
+
     </script>
 }

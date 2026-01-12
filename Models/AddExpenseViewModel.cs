@@ -23,6 +23,7 @@ namespace ExpenseTracker.Models
         public SplitType SplitType { get; set; } 
 
         public List<ParticipantViewModel> Participants { get; set; }
+        public List<decimal>? SplitValues { get; set; }
         public int CreatedByUserId { get; internal set; }
     }
 
